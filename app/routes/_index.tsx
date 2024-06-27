@@ -1,17 +1,32 @@
 import { useState, useEffect } from "react";
 import { LoaderFunction, json } from "@remix-run/node";
 import { useActionData, useLoaderData } from "@remix-run/react";
-import { AskBot } from "~/components/AskBot";
+import { AskBot } from "~/components/AskBot/index";
 import { askMedman } from "~/utils/askMedman";
-import { Thumbnail, Text, Card, Spinner } from "@shopify/polaris";
-import { ALFRED_BIO } from "~/utils/roles/system/alfred";
-import { THE_ROCK, THE_ROCK_BIO } from "~/utils/roles/system/therock";
-import BotControl from "~/components/BotControl";
+import { THE_ROCK_BIO } from "~/utils/roles/system/therock";
+import { BotIntro } from "~/components/BotIntro";
 import { LatestResponse } from "~/components/LatestResponse";
+import { buildPrompt, PromptTypes } from '~/utils/helpers';
 
 export const action = async ({ request }: { request: Request }) => {
   const formData = await request.formData();
-  const prompt = formData.get("prompt") as string;
+  console.log("[ACTION] formData", formData);
+  let prompt = formData.get("prompt") as string;
+  const promptType = formData.get("type");
+
+  console.log("prompt", prompt);
+  console.log("promptType", promptType);
+
+
+
+  if (promptType === "explain-this-code") {
+    console.log("building explain prompt", promptType);
+    prompt = buildPrompt({
+      bot: THE_ROCK_BIO,
+      userPrompt: prompt,
+      type: PromptTypes.ExplainThisCode,
+    });
+  }
 
   const response = await askMedman(prompt);
 
@@ -19,45 +34,41 @@ export const action = async ({ request }: { request: Request }) => {
 };
 
 export const loader: LoaderFunction = async () => {
-  const initialResponse = await askMedman("Explain who you are!?");
-  return json(initialResponse);
-};
-
-// Custom hook for typing effect
-const useTypingEffect = (text: string, speed: number = 50) => {
-  const [displayedText, setDisplayedText] = useState("");
-
-  useEffect(() => {
-    let index = 0;
-    const intervalId = setInterval(() => {
-      setDisplayedText((prev) => prev + text[index]);
-      index++;
-      if (index === text.length) {
-        clearInterval(intervalId);
-      }
-    }, speed);
-
-    return () => clearInterval(intervalId);
-  }, [text, speed]);
-
-  return displayedText;
+  const initialResponse = await askMedman({content: "Explain who you are!?"});
+  return json({ initialResponse });
 };
 
 export default function Index() {
+  const loaderData = useLoaderData<{ initialResponse: string }>();
   const actionData = useActionData<{ response: string }>();
-  const loaderData = useLoaderData<string | undefined>();
 
-  console.log("action data", actionData?.response);
+  const [initialResponse, setInitialResponse] = useState(loaderData.initialResponse);
+
+  useEffect(() => {
+    if (actionData?.response) {
+      setInitialResponse(actionData.response);
+    }
+  }, [actionData?.response]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '2em',
-    }}>
-      <BotControl bot={THE_ROCK_BIO} data={loaderData} />
-      <AskBot />
+    <BotLayout>
+      <BotIntro bot={THE_ROCK_BIO} data={initialResponse} />
+      <AskBot bot={THE_ROCK_BIO} />
       <LatestResponse response={actionData?.response} />
-    </ div>
+    </BotLayout>
   );
 }
+
+const BotLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "2em",
+      }}
+    >
+      {children}
+    </div>
+  );
+};

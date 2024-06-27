@@ -1,17 +1,13 @@
 import { Card, Text } from '@shopify/polaris';
 import React from "react";
-
-interface Bot {
-  name: string;
-  avatarUrl: string;
-}
+import { Bot } from "~/utils/types";
 
 interface Props {
   bot: Bot;
   data: string | undefined;
 }
 
-function BotControl({ bot, data }: Props) {
+export function BotIntro({ bot, data }: Props) {
   return (
     <Card>
       <div
@@ -49,5 +45,3 @@ function BotControl({ bot, data }: Props) {
     </Card>
   );
 }
-
-export default BotControl;

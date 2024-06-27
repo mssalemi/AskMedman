@@ -19,7 +19,7 @@ export function LatestResponse({ response }: { response: string | undefined }) {
 }
 
 
-function encodeHTML(str) {
+function encodeHTML(str:string) {
   return str.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -29,10 +29,8 @@ function encodeHTML(str) {
 
 const preStyle = {
   whiteSpace: 'pre-wrap', // Wraps white spaces and preserves line breaks
-  wordWrap: 'break-word', // Breaks long words to prevent overflow
   overflow: 'hidden', // Hides any overflowing content
-  maxWidth: '100%', // Ensures the component does not exceed the container width
-  boxSizing: 'border-box', // Includes padding and border in the element's total width and height
+  maxWidth: '100%', // Ensures the component does not exceed the container width // Includes padding and border in the element's total width and height
 };
 
 function StyledOutput({ response }: {
